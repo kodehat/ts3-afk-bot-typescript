@@ -1,0 +1,56 @@
+{
+  "name": "ts3-afk-bot-typescript",
+  "version": "1.0.0",
+  "description": "A TeamSpeak3 AFK bot written in TypeScript",
+  "scripts": {
+    "dev": "tsnd --respawn src/index.ts",
+    "test": "jest",
+    "lint": "eslint src/ --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint src/ --ext .js,.jsx,.ts,.tsx --quiet --fix",
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist build",
+    "start": "npm run build && node dist/tsc/index.js",
+    "ts-node": "ts-node",
+    "docs": "typedoc --entryPoints src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kodehat/ts3-afk-bot-typescript.git"
+  },
+  "keywords": [
+    "typescript",
+    "teamspeak",
+    "afkbot"
+  ],
+  "main": "./dist/tsc/index.js",
+  "types": "./dist/tsc/index.d.ts",
+  "author": "Marc-Niclas H. <dev@codehat.de>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/kodehat/ts3-afk-bot-typescript/issues"
+  },
+  "homepage": "https://github.com/kodehat/ts3-afk-bot-typescript#readme",
+  "dependencies": {
+    "@js-joda/core": "^3.2.0",
+    "chalk": "^4.1.1",
+    "dotenv": "^10.0.0",
+    "joi": "^17.4.1",
+    "ts3-nodejs-library": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.24",
+    "@types/node": "^16.3.3",
+    "@typescript-eslint/eslint-plugin": "^4.28.3",
+    "@typescript-eslint/parser": "^4.28.3",
+    "eslint": "^7.31.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^3.4.0",
+    "jest": "^27.0.6",
+    "prettier": "^2.3.2",
+    "ts-jest": "^27.0.3",
+    "ts-node": "^10.1.0",
+    "ts-node-dev": "^1.1.8",
+    "typedoc": "^0.21.4",
+    "typescript": "^4.3.5"
+  }
+}
