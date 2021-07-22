@@ -105,7 +105,7 @@ export class BotService {
   }
 
   private isClientIdleAndListening(client: TeamSpeakClient): boolean {
-    const listeningThreshold = this.configService.config.moveMutedThreshold * 1000;
+    const listeningThreshold = this.configService.config.moveListeningThreshold * 1000;
     const isListening = !client.inputMuted && !client.outputMuted;
     if (isListening) {
       this.log.debug(`Client ${client.nickname} is listening and idle for ${millisToTime(client.idleTime)}.`);
