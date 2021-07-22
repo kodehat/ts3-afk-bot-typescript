@@ -3,6 +3,7 @@ import * as joi from 'joi';
 import { Config } from './config.types';
 import { singleton } from 'tsyringe';
 import { LogService } from '../log';
+import { QueryProtocol } from 'ts3-nodejs-library';
 
 @singleton()
 export class ConfigService {
@@ -24,20 +25,22 @@ export class ConfigService {
     const configSchema = joi
       .object()
       .keys({
-        HOST: joi
+        DEBUG: joi.boolean().required(),
+        QUERY_HOST: joi
           .alternatives()
           .try(joi.string().hostname(), joi.string().ip({ version: 'ipv4' }))
           .required(),
-        PORT: joi.number().positive().required(),
-        USER: joi.string().required(),
-        PASSWORD: joi.string().required(),
-        NICKNAME: joi.string().required(),
-        SERVER_ID: joi.number().positive().required(),
-        CHECK_PERIOD: joi.number().positive().required(),
-        AFK_CHANNEL_ID: joi.number().positive().required(),
-        EXCLUDE_CHANNEL_IDS: joi.alternatives().try(joi.array().items(joi.string()), joi.string()),
-        MOVE_MUTED_THRESHOLD: joi.number().positive().required(),
-        MOVE_LISTENING_THRESHOLD: joi.number().positive().required(),
+        QUERY_PORT: joi.number().positive().required(),
+        QUERY_PROTOCOL: joi.string().valid(QueryProtocol.RAW.toString(), QueryProtocol.SSH.toString()).required(),
+        QUERY_USER: joi.string().required(),
+        QUERY_PASSWORD: joi.string().required(),
+        QUERY_NICKNAME: joi.string().required(),
+        QUERY_SERVER_ID: joi.number().positive().required(),
+        QUERY_CHECK_PERIOD: joi.number().positive().required(),
+        QUERY_AFK_CHANNEL_ID: joi.number().positive().required(),
+        QUERY_EXCLUDE_CHANNEL_IDS: joi.alternatives().try(joi.array().items(joi.string()), joi.string()),
+        QUERY_MOVE_MUTED_THRESHOLD: joi.number().positive().required(),
+        QUERY_MOVE_LISTENING_THRESHOLD: joi.number().positive().required(),
       })
       .unknown();
 
@@ -50,27 +53,26 @@ export class ConfigService {
 
     this.log.info('Configuration successfully loaded and validated.');
 
-    const excludeChannelIds = ConfigService.loadExcludeChannelIds(configVars);
+    const excludeChannelIds = ConfigService.loadExcludeChannelIds(configVars.QUERY_EXCLUDE_CHANNEL_IDS);
     this.log.debug(`Excluded channel IDs: ${excludeChannelIds.join(', ')}`);
 
     return {
-      host: configVars.HOST,
-      port: configVars.PORT,
-      user: configVars.USER,
-      password: configVars.PASSWORD,
-      nickname: configVars.NICKNAME,
-      serverId: configVars.SERVER_ID,
-      checkPeriod: configVars.CHECK_PERIOD,
-      afkChannelId: configVars.AFK_CHANNEL_ID,
+      host: configVars.QUERY_HOST,
+      port: configVars.QUERY_PORT,
+      protocol: configVars.QUERY_PROTOCOL,
+      user: configVars.QUERY_USER,
+      password: configVars.QUERY_PASSWORD,
+      nickname: configVars.QUERY_NICKNAME,
+      serverId: configVars.QUERY_SERVER_ID,
+      checkPeriod: configVars.QUERY_CHECK_PERIOD,
+      afkChannelId: configVars.QUERY_AFK_CHANNEL_ID,
       excludeChannelIds,
-      moveMutedThreshold: configVars.MOVE_MUTED_THRESHOLD,
-      moveListeningThreshold: configVars.MOVE_LISTENING_THRESHOLD,
+      moveMutedThreshold: configVars.QUERY_MOVE_MUTED_THRESHOLD,
+      moveListeningThreshold: configVars.QUERY_MOVE_LISTENING_THRESHOLD,
     };
   }
 
-  // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-  private static loadExcludeChannelIds(configVars: any): string[] {
-    const excludeChannelIds: string = configVars.EXCLUDE_CHANNEL_IDS;
+  private static loadExcludeChannelIds(excludeChannelIds: string): string[] {
     if (!excludeChannelIds) {
       return [];
     }

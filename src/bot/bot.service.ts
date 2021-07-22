@@ -16,11 +16,15 @@ export class BotService {
       return;
     }
 
-    this.log.info(`Connecting to ${this.configService.config.host}:${this.configService.config.port}...`);
+    this.log.info(
+      `Connecting to ${this.configService.config.host}:${this.configService.config.port} ` +
+        `(via ${this.configService.config.protocol.toString().toUpperCase()}).`,
+    );
 
     this._teamspeak = await TeamSpeak.connect({
       host: this.configService.config.host,
       queryport: this.configService.config.port,
+      protocol: this.configService.config.protocol,
       username: this.configService.config.user,
       password: this.configService.config.password,
       nickname: this.configService.config.nickname,
@@ -38,7 +42,7 @@ export class BotService {
     if (this._idleCheckIntervalTimer) {
       clearInterval(this._idleCheckIntervalTimer);
     }
-    this.log.info('Closing connection...');
+    this.log.info('Closing connection.');
     this._teamspeak.forceQuit();
     this.log.info('Closed!');
   }
@@ -60,7 +64,8 @@ export class BotService {
     const possibleClients = (await this._teamspeak?.clientList({ clientType: ClientType.Regular })) || [];
     const clientsToMove = possibleClients.filter(
       (client) =>
-        this.isNotInAfkChannel(client) && (this.isClientIdleAndMuted(client) || this.isClientIdleAndListening(client)),
+        this.isNotInExcludedChannel(client) &&
+        (this.isClientIdleAndMuted(client) || this.isClientIdleAndListening(client)),
     );
     for (const client of clientsToMove) {
       this.log.info(
@@ -69,13 +74,13 @@ export class BotService {
       const currentChannel: string = client.cid;
       const afkChannel = await this._teamspeak?.getChannelById(String(this.configService.config.afkChannelId));
       if (afkChannel) {
-        this._teamspeak?.clientMove(client, afkChannel);
-        this._teamspeak?.sendTextMessage(
+        await this._teamspeak?.clientMove(client, afkChannel);
+        await this._teamspeak?.sendTextMessage(
           client,
           TextMessageTargetMode.CLIENT,
           `You have been moved, because you're idling for ${millisToTime(client.idleTime)}.`,
         );
-        this._teamspeak?.sendTextMessage(
+        await this._teamspeak?.sendTextMessage(
           currentChannel,
           TextMessageTargetMode.CHANNEL,
           `Client ${client.nickname} was moved, because he was idling too long (${millisToTime(client.idleTime)}).`,
@@ -84,19 +89,27 @@ export class BotService {
     }
   }
 
-  private isNotInAfkChannel(client: TeamSpeakClient): boolean {
-    return client.cid !== String(this.configService.config.afkChannelId);
+  private isNotInExcludedChannel(client: TeamSpeakClient): boolean {
+    const excludedChannelIds: string[] = [...this.configService.config.excludeChannelIds];
+    excludedChannelIds.push(String(this.configService.config.afkChannelId));
+    return excludedChannelIds.indexOf(client.cid) === -1;
   }
 
   private isClientIdleAndMuted(client: TeamSpeakClient): boolean {
     const mutedThreshold = this.configService.config.moveMutedThreshold * 1000;
-    this.log.debug(`Client ${client.nickname} is muted and idle for ${millisToTime(client.idleTime)}.`);
-    return client.idleTime > mutedThreshold && (client.inputMuted || client.outputMuted);
+    const isMute = client.inputMuted || client.outputMuted;
+    if (isMute) {
+      this.log.debug(`Client ${client.nickname} is muted and idle for ${millisToTime(client.idleTime)}.`);
+    }
+    return client.idleTime > mutedThreshold && isMute;
   }
 
   private isClientIdleAndListening(client: TeamSpeakClient): boolean {
     const listeningThreshold = this.configService.config.moveMutedThreshold * 1000;
-    this.log.debug(`Client ${client.nickname} is listening and idle for ${millisToTime(client.idleTime)}.`);
-    return client.idleTime > listeningThreshold && !client.inputMuted && !client.outputMuted;
+    const isListening = !client.inputMuted && !client.outputMuted;
+    if (isListening) {
+      this.log.debug(`Client ${client.nickname} is listening and idle for ${millisToTime(client.idleTime)}.`);
+    }
+    return client.idleTime > listeningThreshold && isListening;
   }
 }
