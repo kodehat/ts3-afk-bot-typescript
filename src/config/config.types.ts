@@ -7,4 +7,7 @@ export interface Config {
   serverId: number;
   checkPeriod: number;
   afkChannelId: number;
+  excludeChannelIds: string[];
+  moveMutedThreshold: number;
+  moveListeningThreshold: number;
 }
