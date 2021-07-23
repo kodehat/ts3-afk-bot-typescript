@@ -1,4 +1,4 @@
-export function millisToTime(millis: number) {
+export function millisToTime(millis: number): string {
   const seconds = Number((millis / 1000).toFixed(0));
   const minutes = Number((millis / (1000 * 60)).toFixed(0));
   const hours = Number((millis / (1000 * 60 * 60)).toFixed(1));
