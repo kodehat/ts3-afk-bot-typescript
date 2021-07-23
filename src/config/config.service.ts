@@ -14,7 +14,7 @@ export class ConfigService {
   }
 
   private _loadConfig(): Config {
-    this.log.info('Loading and validating configuration...');
+    this.log.info('Loading and validating configuration.');
     const result = dotenv.config();
 
     if (result.error) {

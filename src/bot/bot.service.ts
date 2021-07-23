@@ -7,7 +7,7 @@ import { millisToTime } from '../util/time.util';
 @injectable()
 export class BotService {
   private _teamspeak?: TeamSpeak;
-  private _idleCheckIntervalTimer?: ReturnType<typeof setInterval>;
+  private _isRunIdleCheckTask = false;
 
   constructor(private configService: ConfigService, private log: LogService) {}
 
@@ -32,31 +32,29 @@ export class BotService {
     await this._teamspeak.useBySid(String(this.configService.config.serverId));
     await this._teamspeak.clientUpdate({ clientNickname: this.configService.config.nickname });
 
-    process.on('SIGINT', () => this.disconnect());
+    process.on('SIGINT', () => {
+      this.disconnect();
+      process.exit(0);
+    });
   }
 
   private disconnect(): void {
     if (!this._teamspeak) {
       return;
     }
-    if (this._idleCheckIntervalTimer) {
-      clearInterval(this._idleCheckIntervalTimer);
-    }
+    this._isRunIdleCheckTask = false;
     this.log.info('Closing connection.');
-    this._teamspeak.forceQuit();
+    this._teamspeak?.forceQuit();
     this.log.info('Closed!');
   }
 
   async startIdleCheck(): Promise<void> {
-    if (this._idleCheckIntervalTimer) {
+    if (this._isRunIdleCheckTask) {
       return;
     }
+    this._isRunIdleCheckTask = true;
     this.log.info('Starting idle check.');
     await this.idleCheck(); // Running once right away as otherwise waiting for delay for first run.
-    this._idleCheckIntervalTimer = setInterval(
-      async () => this.idleCheck(),
-      this.configService.config.checkPeriod * 1000,
-    );
   }
 
   async idleCheck(): Promise<void> {
@@ -80,12 +78,14 @@ export class BotService {
           TextMessageTargetMode.CLIENT,
           `You have been moved, because you're idling for ${millisToTime(client.idleTime)}.`,
         );
-        await this._teamspeak?.sendTextMessage(
+        await this._teamspeak?.sendChannelMessage(
           currentChannel,
-          TextMessageTargetMode.CHANNEL,
           `Client ${client.nickname} was moved, because he was idling too long (${millisToTime(client.idleTime)}).`,
         );
       }
+    }
+    if (this._isRunIdleCheckTask) {
+      setTimeout(async () => this.idleCheck(), this.configService.config.checkPeriod * 1000);
     }
   }
 
