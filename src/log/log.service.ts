@@ -40,7 +40,7 @@ export class LogService {
         age: { seconds: 60 * 60 * 24 * 7 },
         extensions: '.log',
       });
-    }, 60 * 60 * 24);
+    }, 60 * 60 * 24 * 1000);
   }
 
   // private doLog(tag: string, msg: string): void {
