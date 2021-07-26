@@ -33,14 +33,16 @@
   "homepage": "https://github.com/kodehat/ts3-afk-bot-typescript#readme",
   "dependencies": {
     "@js-joda/core": "^3.2.0",
-    "chalk": "^4.1.1",
     "dotenv": "^10.0.0",
+    "find-remove": "^3.1.0",
     "joi": "^17.4.1",
     "reflect-metadata": "^0.1.13",
     "ts3-nodejs-library": "^3.3.0",
+    "tslog": "^3.2.0",
     "tsyringe": "^4.6.0"
   },
   "devDependencies": {
+    "@types/find-remove": "^2.0.1",
     "@types/jest": "^26.0.24",
     "@types/node": "^16.3.3",
     "@typescript-eslint/eslint-plugin": "^4.28.3",
